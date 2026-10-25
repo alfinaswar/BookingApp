@@ -5,7 +5,27 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Booking</title>
+    <title>{{ \App\Support\Brand::name() }}</title>
+    <link rel="icon" href="{{ \App\Support\Brand::favicon() }}" />
+    <style>
+        :root {
+            {!! \App\Support\Brand::cssVariables() !!}
+        }
+
+        .btn-brand {
+            background-color: var(--brand-primary);
+            color: #fff;
+        }
+
+        .btn-brand:hover {
+            filter: brightness(0.92);
+            color: #fff;
+        }
+
+        .text-brand {
+            color: var(--brand-primary) !important;
+        }
+    </style>
     <link href="{{ asset('') }}assets/css/tabler.min.css?1692870487" rel="stylesheet" />
     <link href="{{ asset('') }}assets/css/tabler-flags.min.css?1692870487" rel="stylesheet" />
     <link href="{{ asset('') }}assets/css/tabler-payments.min.css?1692870487" rel="stylesheet" />
@@ -56,6 +76,7 @@
             border-radius: 5px;
         }
     </style>
+    @stack('styles')
 </head>
 
 <body>
@@ -69,11 +90,13 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <h5 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
-                    <a href=".">
-                        <img src="{{ asset('assets/img/icon/basecamp.png') }}" width="1000" height="1000"
-                            alt="Tabler" class="navbar-brand-image">
+                    <a href="{{ route('home') }}">
+                        <img src="{{ \App\Support\Brand::logo() }}" alt="{{ \App\Support\Brand::name() }}"
+                            class="navbar-brand-image" style="max-height:40px;width:auto;object-fit:contain;">
                     </a>
-                    <span style="color: #1F573A; font-size: 18px">Basecamp Military Lifestyle</span>
+                    @if (\App\Support\Brand::showCompanyName())
+                        <span style="color: var(--brand-primary); font-size: 18px">{{ \App\Support\Brand::company() }}</span>
+                    @endif
                 </h5>
 
                 <div class="navbar-nav flex-row order-md-last">
@@ -416,6 +439,14 @@
                                         </span>
                                     </a>
                                     <div class="dropdown-menu">
+                                        <a class="dropdown-item fw-bold" href="{{ route('setting.system.index') }}">
+                                            <i class="fas fa-cog me-1"></i> Pengaturan Sistem
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item fw-bold" href="{{ route('master.index') }}">
+                                            Master Tarif, Unit &amp; Add-on
+                                        </a>
+                                        <div class="dropdown-divider"></div>
                                         <a class="dropdown-item" href="{{ route('fasilitas.index') }}" rel="noopener">
                                             Master Fasilitas
                                         </a>
@@ -447,8 +478,7 @@
             <main class="py-3">
                 @yield('content')
             </main>
-        </div>
-    </div>
+        </div>    </div>
 
     <!-- Libs JS -->
     <script src="{{ asset('') }}assets/libs/apexcharts/dist/apexcharts.min.js?1692870487" defer></script>
@@ -462,6 +492,17 @@
     <script src="{{ asset('') }}assets/js/tabler.min.js?1692870487" defer></script>
     <script src="{{ asset('') }}assets/js/demo.min.js?1692870487" defer></script>
 
+    @stack('scripts')
+
+    <footer class="footer footer-transparent d-print-none">
+        <div class="container-xl">
+            <div class="row text-center align-items-center">
+                <div class="col-12 text-muted">
+                    {{ \App\Support\Brand::footer() }}
+                </div>
+            </div>
+        </div>
+    </footer>
 
 </body>
 

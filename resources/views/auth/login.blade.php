@@ -13,7 +13,24 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Sign in - Tabler - Premium and Open Source dashboard template with responsive and high quality UI.</title>
+    <title>Masuk - {{ \App\Support\Brand::name() }}</title>
+    <link rel="icon" href="{{ \App\Support\Brand::favicon() }}" />
+    <style>
+        :root {
+            {!! \App\Support\Brand::cssVariables() !!}
+        }
+
+        .btn-brand {
+            background-color: var(--brand-primary);
+            border-color: var(--brand-primary);
+            color: #fff;
+        }
+
+        .btn-brand:hover {
+            filter: brightness(0.92);
+            color: #fff;
+        }
+    </style>
     <!-- CSS files -->
     <link href="{{ asset('') }}assets/css/tabler.min.css?1692870487" rel="stylesheet" />
     <link href="{{ asset('') }}assets/css/tabler-flags.min.css?1692870487" rel="stylesheet" />
@@ -39,10 +56,11 @@
         <div class="container container-tight py-4">
             <center>
             <div class="text-center mb-4">
-                <a href="." class="">
-                    <img src="{{ asset('assets/img/icon/basecamp.png') }}" width="30%" height="30%"
-                        alt="Tabler">
+                <a href="{{ route('welcome.landing') }}" class="">
+                    <img src="{{ \App\Support\Brand::logo() }}" style="max-width:200px;max-height:90px;object-fit:contain;"
+                        alt="{{ \App\Support\Brand::name() }}">
                 </a>
+                <div class="text-muted mt-2">{{ \App\Support\Brand::company() }}</div>
             </div>
             </center>
             <div class="card card-md">
@@ -97,7 +115,7 @@
                             </label>
                         </div>
                         <div class="form-footer">
-                            <button type="submit" class="btn btn-primary w-100">
+                            <button type="submit" class="btn btn-brand w-100">
                                 {{ __('Login') }}
                             </button>
                         </div>

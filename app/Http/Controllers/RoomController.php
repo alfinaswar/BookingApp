@@ -64,61 +64,100 @@ class RoomController extends Controller
 
     public function getroom(Request $request)
     {
-        $checkinDate = $request->checkIn;
-        $checkoutDate = $request->checkOut;
+        // $checkinDate = $request->checkIn;
+        // $checkoutDate = $request->checkOut;
+        // $today = now();
+        // $today1 = $today->format('Y-m-d');
+        // if ($checkinDate == null) {
+        //     $kamarkosong = DB::table('rooms')
+        //         ->leftJoin('bookings', function ($join) use ($today1) {
+        //             $join
+        //                 ->on('rooms.id', '=', 'bookings.roomId')
+        //                 ->where(function ($query) use ($today1) {
+        //                     $query->where(function ($query) use ($today1) {
+        //                         $query
+        //                             ->where('bookings.checkIn', '<=', $today1)
+        //                             ->where('bookings.checkOut', '>=', $today1);
+        //                     });
+        //                 });
+        //         })
+        //         ->leftJoin('roomtypes', 'rooms.roomtype', '=', 'roomtypes.id')
+        //         ->whereNull('bookings.id')
+        //         ->select('rooms.id', 'roomtypes.nama as tiperoom', 'rooms.nama', 'rooms.deskripsi', 'rooms.qty', 'rooms.tarifWd', 'rooms.tarifWe', 'rooms.Fasilitas', 'rooms.status', 'rooms.imgPreview')
+        //         ->orderBy('id', 'desc')
+        //         ->get();
+
+        //     for ($i = 0; $i < count($kamarkosong); $i++) {
+        //         $kamarkosong[$i]->Fasilitas = json_decode($kamarkosong[$i]->Fasilitas);
+        //     }
+        // } else {
+        //     $checkinDate = $request->checkIn;
+        //     $checkoutDate = $request->checkOut;
+        //     // dd($checkinDate);
+        //     $kamarkosong = DB::table('rooms')
+        //         ->leftJoin('bookings', function ($join) use ($checkinDate, $checkoutDate) {
+        //             $join
+        //                 ->on('rooms.id', '=', 'bookings.roomId')
+        //                 ->where(function ($query) use ($checkinDate, $checkoutDate) {
+        //                     $query->where(function ($query) use ($checkinDate, $checkoutDate) {
+        //                         $query
+        //                             ->where('bookings.checkIn', '<=', $checkoutDate)
+        //                             ->where('bookings.checkOut', '>=', $checkinDate);
+        //                     });
+        //                 });
+        //         })
+        //         ->leftJoin('roomtypes', 'rooms.roomtype', '=', 'roomtypes.id')
+        //         ->whereNull('bookings.id')
+        //         ->select('rooms.id', 'roomtypes.nama as tiperoom', 'rooms.nama', 'rooms.deskripsi', 'rooms.qty', 'rooms.tarifWd', 'rooms.tarifWe', 'rooms.Fasilitas', 'rooms.status', 'rooms.imgPreview')
+        //         ->orderBy('id', 'desc')
+        //         ->get();
+
+        //     for ($i = 0; $i < count($kamarkosong); $i++) {
+        //         $kamarkosong[$i]->Fasilitas = json_decode($kamarkosong[$i]->Fasilitas);
+        //     }
+        // }
+
+        // // dd($kamarkosong);
+        // return response()->json($kamarkosong);
         $today = now();
         $today1 = $today->format('Y-m-d');
-        if ($checkinDate == null) {
-            $kamarkosong = DB::table('rooms')
-                ->leftJoin('bookings', function ($join) use ($today1) {
-                    $join
-                        ->on('rooms.id', '=', 'bookings.roomId')
-                        ->where(function ($query) use ($today1) {
-                            $query->where(function ($query) use ($today1) {
-                                $query
-                                    ->where('bookings.checkIn', '<=', $today1)
-                                    ->where('bookings.checkOut', '>=', $today1);
-                            });
-                        });
-                })
-                ->leftJoin('roomtypes', 'rooms.roomtype', '=', 'roomtypes.id')
-                ->whereNull('bookings.id')
-                ->select('rooms.id', 'roomtypes.nama as tiperoom', 'rooms.nama', 'rooms.deskripsi', 'rooms.qty', 'rooms.tarifWd', 'rooms.tarifWe', 'rooms.Fasilitas', 'rooms.status', 'rooms.imgPreview')
-                ->orderBy('id', 'desc')
-                ->get();
 
-            for ($i = 0; $i < count($kamarkosong); $i++) {
-                $kamarkosong[$i]->Fasilitas = json_decode($kamarkosong[$i]->Fasilitas);
-            }
+        if (empty($request->checkIn)) {
+            $checkinDate = $today1;
+            $checkoutDate = $today1;
         } else {
             $checkinDate = $request->checkIn;
             $checkoutDate = $request->checkOut;
-            // dd($checkinDate);
-            $kamarkosong = DB::table('rooms')
-                ->leftJoin('bookings', function ($join) use ($checkinDate, $checkoutDate) {
-                    $join
-                        ->on('rooms.id', '=', 'bookings.roomId')
-                        ->where(function ($query) use ($checkinDate, $checkoutDate) {
-                            $query->where(function ($query) use ($checkinDate, $checkoutDate) {
-                                $query
-                                    ->where('bookings.checkIn', '<=', $checkoutDate)
-                                    ->where('bookings.checkOut', '>=', $checkinDate);
-                            });
-                        });
-                })
-                ->leftJoin('roomtypes', 'rooms.roomtype', '=', 'roomtypes.id')
-                ->whereNull('bookings.id')
-                ->select('rooms.id', 'roomtypes.nama as tiperoom', 'rooms.nama', 'rooms.deskripsi', 'rooms.qty', 'rooms.tarifWd', 'rooms.tarifWe', 'rooms.Fasilitas', 'rooms.status', 'rooms.imgPreview')
-                ->orderBy('id', 'desc')
-                ->get();
+        }
 
-            for ($i = 0; $i < count($kamarkosong); $i++) {
-                $kamarkosong[$i]->Fasilitas = json_decode($kamarkosong[$i]->Fasilitas);
+        $kamarkosong = DB::table('rooms')
+            ->leftJoin('bookings', 'rooms.id', '=', 'bookings.roomId')
+            ->leftJoin('roomtypes', 'rooms.roomtype', '=', 'roomtypes.id')
+            ->select('rooms.id', 'roomtypes.nama as tiperoom', 'rooms.nama', 'rooms.deskripsi', 'rooms.qty', 'rooms.tarifWd', 'rooms.tarifWe', 'rooms.Fasilitas', 'rooms.status', 'rooms.imgPreview', 'bookings.checkIn as bookingCheckIn', 'bookings.checkOut as bookingCheckOut')
+            ->orderBy('rooms.id', 'desc')
+            ->get();
+
+        $processedRooms = [];
+        $uniqueRooms = [];
+
+        foreach ($kamarkosong as $room) {
+            if (!in_array($room->id, $processedRooms)) {
+                $room->Fasilitas = json_decode($room->Fasilitas);
+                if (!empty($room->bookingCheckIn) && !empty($room->bookingCheckOut)) {
+                    if ($room->bookingCheckIn <= $checkoutDate && $room->bookingCheckOut >= $checkinDate) {
+                        $room->status = 'Tidak Tersedia dari ' . $room->bookingCheckIn . ' hingga ' . $room->bookingCheckOut;
+                    } else {
+                        $room->status = 'Tersedia';
+                    }
+                } else {
+                    $room->status = 'Tersedia';
+                }
+                $uniqueRooms[] = $room;
+                $processedRooms[] = $room->id;
             }
         }
 
-        // dd($kamarkosong);
-        return response()->json($kamarkosong);
+        return response()->json($uniqueRooms);
     }
 
     /**

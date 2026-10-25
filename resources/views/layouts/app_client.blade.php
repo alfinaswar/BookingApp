@@ -5,7 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Booking</title>
+    <title>{{ \App\Support\Brand::name() }}</title>
+    <link rel="icon" href="{{ \App\Support\Brand::favicon() }}" />
+    <style>
+        :root {
+            {!! \App\Support\Brand::cssVariables() !!}
+        }
+    </style>
     <link href="{{ asset('') }}assets/css/tabler.min.css?1692870487" rel="stylesheet" />
     <link href="{{ asset('') }}assets/css/tabler-flags.min.css?1692870487" rel="stylesheet" />
     <link href="{{ asset('') }}assets/css/tabler-payments.min.css?1692870487" rel="stylesheet" />

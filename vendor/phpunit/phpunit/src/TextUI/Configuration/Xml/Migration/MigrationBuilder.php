@@ -9,11 +9,11 @@
  */
 namespace PHPUnit\TextUI\XmlConfiguration;
 
-use function array_key_exists;
-use function sprintf;
 use function version_compare;
 
 /**
+ * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+ *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
 final class MigrationBuilder
@@ -28,7 +28,7 @@ final class MigrationBuilder
             IntroduceCoverageElement::class,
             MoveAttributesFromRootToCoverage::class,
             MoveAttributesFromFilterWhitelistToCoverage::class,
-            MoveWhitelistDirectoriesToCoverage::class,
+            MoveWhitelistIncludesToCoverage::class,
             MoveWhitelistExcludesToCoverage::class,
             RemoveEmptyFilter::class,
             CoverageCloverToReport::class,
@@ -40,7 +40,7 @@ final class MigrationBuilder
             ConvertLogTypes::class,
         ],
 
-        '9.5' => [
+        '9.6' => [
             RemoveListeners::class,
             RemoveTestSuiteLoaderAttributes::class,
             RemoveCacheResultFileAttribute::class,
@@ -59,22 +59,18 @@ final class MigrationBuilder
             RemoveLoggingElements::class,
             RemoveTestDoxGroupsElement::class,
         ],
+
+        '10.0' => [
+            MoveCoverageDirectoriesToSource::class,
+        ],
+
+        '10.4' => [
+            RemoveBeStrictAboutTodoAnnotatedTestsAttribute::class,
+        ],
     ];
 
-    /**
-     * @throws MigrationBuilderException
-     */
     public function build(string $fromVersion): array
     {
-        if (!array_key_exists($fromVersion, self::AVAILABLE_MIGRATIONS)) {
-            throw new MigrationBuilderException(
-                sprintf(
-                    'Migration from schema version %s is not supported',
-                    $fromVersion
-                )
-            );
-        }
-
         $stack = [new UpdateSchemaLocation];
 
         foreach (self::AVAILABLE_MIGRATIONS as $version => $migrations) {

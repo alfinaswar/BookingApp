@@ -1,11 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Nette Framework (https://nette.org)
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
-
-declare(strict_types=1);
 
 namespace Nette\Iterators;
 
@@ -31,26 +29,12 @@ class CachingIterator extends \CachingIterator implements \Countable
 	private int $counter = 0;
 
 
-	public function __construct($iterator)
+	public function __construct(iterable|\stdClass $iterable)
 	{
-		if (is_array($iterator) || $iterator instanceof \stdClass) {
-			$iterator = new \ArrayIterator($iterator);
-
-		} elseif ($iterator instanceof \IteratorAggregate) {
-			do {
-				$iterator = $iterator->getIterator();
-			} while ($iterator instanceof \IteratorAggregate);
-
-			assert($iterator instanceof \Iterator);
-
-		} elseif ($iterator instanceof \Iterator) {
-		} elseif ($iterator instanceof \Traversable) {
-			$iterator = new \IteratorIterator($iterator);
-		} else {
-			throw new Nette\InvalidArgumentException(sprintf('Invalid argument passed to %s; array or Traversable expected, %s given.', self::class, is_object($iterator) ? $iterator::class : gettype($iterator)));
-		}
-
-		parent::__construct($iterator, 0);
+		$iterable = $iterable instanceof \stdClass
+			? new \ArrayIterator((array) $iterable)
+			: Nette\Utils\Iterables::toIterator($iterable);
+		parent::__construct($iterable, 0);
 	}
 
 

@@ -1,16 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Nette Framework (https://nette.org)
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 
-declare(strict_types=1);
-
 namespace Nette\Utils;
 
 use Nette;
 use Nette\MemberAccessException;
+use function strlen;
 
 
 /**
@@ -148,7 +147,11 @@ final class ObjectHelpers
 				&& ($rm = $rc->getMethod($nm))->name === $nm && !$rm->isPrivate() && !$rm->isStatic();
 
 			if ($read || $write) {
-				$props[$name] = $read << 0 | ($nm[0] === 'g') << 1 | $rm->returnsReference() << 2 | $write << 3 | ($type === '-deprecated') << 4;
+				$props[$name] = $read << 0
+					| ($nm[0] === 'g') << 1
+					| $rm->returnsReference() << 2
+					| $write << 3
+					| ($type === '-deprecated') << 4;
 			}
 		}
 
@@ -179,7 +182,8 @@ final class ObjectHelpers
 			if ($item !== $value && (
 				($len = levenshtein($item, $value, 10, 11, 10)) < $min
 				|| ($len = levenshtein(preg_replace($re, '*', $item), $norm, 10, 11, 10)) < $min
-			)) {
+			)
+			) {
 				$min = $len;
 				$best = $item;
 			}
@@ -220,7 +224,7 @@ final class ObjectHelpers
 				if ($rp->isPublic() && !$rp->isStatic()) {
 					$prop = $name >= 'onA' && $name < 'on_' ? 'event' : true;
 				}
-			} catch (\ReflectionException $e) {
+			} catch (\ReflectionException) {
 			}
 		}
 

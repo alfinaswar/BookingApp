@@ -32,6 +32,7 @@ return [
 
         'sync' => [
             'driver' => 'sync',
+            // 'sync' menjalankan job langsung; notifikasi tidak butuh worker.
         ],
 
         'database' => [
@@ -39,7 +40,8 @@ return [
             'table' => 'jobs',
             'queue' => 'default',
             'retry_after' => 90,
-            'after_commit' => false,
+            // Notifikasi booking di-push hanya setelah transaksi commit.
+            'after_commit' => true,
         ],
 
         'beanstalkd' => [
@@ -68,7 +70,7 @@ return [
             'queue' => env('REDIS_QUEUE', 'default'),
             'retry_after' => 90,
             'block_for' => null,
-            'after_commit' => false,
+            'after_commit' => true,
         ],
 
     ],

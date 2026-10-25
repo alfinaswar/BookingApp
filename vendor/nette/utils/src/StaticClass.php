@@ -1,11 +1,9 @@
-<?php
+<?php declare(strict_types=1);
 
 /**
  * This file is part of the Nette Framework (https://nette.org)
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
-
-declare(strict_types=1);
 
 namespace Nette;
 
@@ -16,12 +14,10 @@ namespace Nette;
 trait StaticClass
 {
 	/**
-	 * @return never
-	 * @throws \Error
+	 * Class is static and cannot be instantiated.
 	 */
-	final public function __construct()
+	private function __construct()
 	{
-		throw new \Error('Class ' . static::class . ' is static and cannot be instantiated.');
 	}
 
 

@@ -12,7 +12,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Lepas hold DP yang kedaluwarsa supaya unit kembali tersedia.
+        $schedule->command('bookings:expire-holds')->everyMinute()->withoutOverlapping();
+
+        // Bersihkan jejak job gagal lama, dan pastikan antrean tidak menumpuk.
+        $schedule->command('notifications:health --prune')
+            ->hourly()
+            ->emailOutputOnFailure(config('basecamp.admin_email'));
     }
 
     /**
