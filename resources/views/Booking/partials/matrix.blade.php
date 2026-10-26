@@ -13,7 +13,8 @@
                 @foreach ($dates as $date)
                     @php $d = \Carbon\Carbon::parse($date); @endphp
                     <th class="text-center {{ in_array($d->dayOfWeekIso, [6, 7]) ? 'bg-red-lt' : '' }}"
-                        style="min-width:44px;">
+                        style="min-width:44px;" data-date="{{ $date }}" role="button"
+                        title="Pilih rentang mulai {{ $date }}">
                         {{ $d->format('d') }}<br>
                         <small class="text-muted">{{ $d->isoFormat('dd') }}</small>
                     </th>
@@ -70,4 +71,9 @@
     .cell-available.sel-end { box-shadow: inset -3px 0 0 #1f573a; }
     .cell-booked { background: #ffe3e3; }
     .cell-blocked { background: #eceef0; }
+    th[data-date] { cursor: pointer; user-select: none; }
+    th[data-date]:hover { background: #bfe3ff; }
+    th[data-date].in-range { background: #e3f0ff; }
+    th[data-date].sel-start,
+    th[data-date].sel-end { box-shadow: inset 0 -3px 0 #1f573a; }
 </style>

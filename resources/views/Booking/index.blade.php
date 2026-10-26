@@ -33,16 +33,16 @@
                                     <div class="col-md-3">
                                         <label class="form-label">Check-in</label>
                                         <input type="date" id="fCheckIn" class="form-control"
-                                            min="{{ now()->toDateString() }}" value="{{ $calendar['from'] }}">
+                                            min="{{ now()->toDateString() }}" value="{{ $checkIn }}">
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label">Check-out</label>
                                         <input type="date" id="fCheckOut" class="form-control"
-                                            value="{{ $calendar['to'] }}">
+                                            value="{{ $checkOut }}">
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label">Dewasa</label>
-                                        <input type="number" id="fDewasa" class="form-control" value="2" min="1">
+                                        <input type="number" id="fDewasa" class="form-control" value="1" min="1">
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label">Anak</label>
@@ -55,7 +55,8 @@
                                 </div>
 
                                 <p class="text-muted small mb-2">
-                                    Klik sel hijau untuk memilih unit. Bisa pilih beberapa unit sekaligus.
+                                    Klik angka tanggal di baris atas untuk menentukan rentang menginap
+                                    (klik pertama = check-in, klik kedua = check-out). Klik sel hijau untuk memilih unit.
                                     <span id="malamInfo" class="fw-bold"></span>
                                 </p>
 
@@ -159,6 +160,7 @@
                 cart: new Map(), // unitId -> {kode, tipe, roomId}
                 quote: null,
                 promo: '',
+                picking: false, // true = klik header berikutnya menentukan check-out
             };
 
             const fmt = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
@@ -182,12 +184,132 @@
                 return Math.max(0, Math.round(ms / 86400000));
             }
 
+            // Rentang terpilih harus ada di jendela matriks yang sedang tampil.
+            function rangeInWindow() {
+                const {
+                    check_in,
+                    check_out
+                } = ranges();
+                if (!check_in || !check_out) return false;
+                return $('td[data-date]').filter(function() {
+                    const d = $(this).data('date');
+                    return d >= check_in && d < check_out;
+                }).length > 0;
+            }
+
+            // Tanggal matriks (YYYY-MM-DD) → Date lokal (bebas geser timezone).
+            function dateFromStr(s) {
+                const p = String(s).split('-');
+                return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+            }
+
+            function fmtDate(d) {
+                return d.getFullYear() + '-' +
+                    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(d.getDate()).padStart(2, '0');
+            }
+
+            function addDays(s, n) {
+                const d = dateFromStr(s);
+                d.setDate(d.getDate() + n);
+                return fmtDate(d);
+            }
+
+            // Tanggal paling akhir yang bisa dipilih sebagai check-out
+            // (hari pertama di luar jendela matriks).
+            function lastNight() {
+                let maxDate = null;
+                $('th[data-date]').each(function() {
+                    const d = $(this).data('date');
+                    if (!maxDate || d > maxDate) maxDate = d;
+                });
+                return maxDate ? addDays(maxDate, 1) : null;
+            }
+
+            const todayStr = () => fmtDate(new Date());
+
+            // Sinkronkan batas input. Jarak check-in→check-out bebas:
+            // check-out tidak pernah dipaksa +1 hari; bila tidak valid, dikosongkan.
+            function applyRange(ci, co) {
+                const floor = $ci.attr('min') || todayStr();
+
+                if (ci < floor) ci = floor;
+
+                co = co || '';
+                if (co) {
+                    const last = lastNight();
+                    if (last && co > last) co = last;
+                    if (co <= ci) co = '';
+                }
+
+                $ci.val(ci);
+                $co.attr('min', addDays(ci, 1)).val(co);
+            }
+
+            // Klik header tanggal: klik-1 = check-in, klik-2 = check-out.
+            function onHeaderClick(date) {
+                const ci = $ci.val();
+
+                if (!state.picking || !ci || date <= ci) {
+                    applyRange(date, '');
+                    state.picking = true;
+                } else {
+                    applyRange(ci, date);
+                    state.picking = false;
+                }
+
+                state.cart.clear();
+                paintMatrix();
+                renderEmpty();
+
+                const co = $co.val();
+                toast(co
+                    ? `Check-in ${fmtDateID($ci.val())} · Check-out ${fmtDateID(co)}`
+                    : `Check-in ${fmtDateID($ci.val())} · pilih tanggal check-out`,
+                    co ? 'success' : 'info');
+            }
+
+            function fmtDateID(s) {
+                if (!s) return '-';
+                const d = dateFromStr(s);
+                return String(d.getDate()).padStart(2, '0') + '/' +
+                    String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+            }
+
             function paintMatrix() {
+                const {
+                    check_in,
+                    check_out
+                } = ranges();
+                const nights = nightsBetween();
+                const stayDates = [];
+                for (let i = 0; i < nights; i++) {
+                    stayDates.push(addDays(check_in, i));
+                }
+
+                $('#malamInfo').text(
+                    nights > 0 ? `· ${nights} malam` :
+                    (check_in ? '· pilih tanggal check-out' : '')
+                );
+
+                // Header tanggal: tandai awal/akhir rentang terpilih.
+                $('th[data-date]').each(function() {
+                    const date = $(this).data('date');
+                    $(this).toggleClass('sel-start', date === check_in);
+                    $(this).toggleClass('sel-end', !!check_out && date === check_out);
+                    $(this).toggleClass('in-range', date >= check_in && date < check_out);
+                });
+
                 $('tr[data-unit-id]').each(function() {
                     const unitId = $(this).data('unit-id');
                     const selected = state.cart.has(unitId);
                     $(this).find('td[data-date]').each(function() {
-                        $(this).toggleClass('selected', selected && $(this).data('state') === 'available');
+                        const date = $(this).data('date');
+                        const inRange = stayDates.includes(date);
+                        const on = selected && inRange && $(this).data('state') === 'available';
+                        $(this).toggleClass('selected', on);
+                        $(this).toggleClass('sel-start', on && date === stayDates[0]);
+                        $(this).toggleClass('sel-end', on && date === stayDates[stayDates.length - 1]);
                     });
                 });
             }
@@ -303,6 +425,11 @@
                 });
             }
 
+            // Header tanggal = pemilih rentang. Sel hijau tetap = pemilih unit.
+            $(document).on('click', 'th[data-date]', function() {
+                onHeaderClick($(this).data('date'));
+            });
+
             // Pilih / lepas unit dengan klik sel
             $(document).on('click', 'td[data-state="available"]', function() {
                 const $row = $(this).closest('tr');
@@ -310,6 +437,11 @@
 
                 if (nightsBetween() <= 0) {
                     toast('Tentukan tanggal check-in dan check-out dulu.', 'warning');
+                    return;
+                }
+
+                if (!rangeInWindow()) {
+                    toast('Tanggal di luar tampilan. Klik "Terapkan" dulu.', 'warning');
                     return;
                 }
 
@@ -356,25 +488,24 @@
                     return;
                 }
 
-                $.get("{{ route('booking.kalender') }}", {
-                    from: check_in,
-                    to: check_out
-                }, function(res) {
-                    $.get("{{ route('booking.index') }}", {}, function() {
-                        location.reload();
-                    });
-                });
+                window.location.href = "{{ route('booking.index') }}?from=" + check_in + "&to=" + check_out;
             });
 
             $ci.on('change', function() {
-                const start = new Date($(this).val());
-                if (!isNaN(start)) {
-                    start.setDate(start.getDate() + 1);
-                    $co.attr('min', start.toISOString().split('T')[0]);
-                    if (!$co.val() || new Date($co.val()) <= new Date($(this).val())) {
-                        $co.val(start.toISOString().split('T')[0]);
-                    }
-                }
+                const ci = $(this).val();
+                if (!ci) return;
+                applyRange(ci, $co.val());
+                state.picking = false;
+                state.cart.clear();
+                paintMatrix();
+                renderEmpty();
+            });
+
+            $co.on('change', function() {
+                const co = $(this).val();
+                if (!$ci.val()) return;
+                applyRange($ci.val(), co);
+                state.picking = false;
                 state.cart.clear();
                 paintMatrix();
                 renderEmpty();
@@ -431,8 +562,9 @@
             });
 
             // init
+            applyRange($ci.val(), $co.val());
             renderEmpty();
-            $ci.trigger('change');
+            paintMatrix();
         })();
     </script>
 @endpush

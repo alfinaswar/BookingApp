@@ -290,10 +290,62 @@
                     toast('success', 'Check-in berhasil');
                     reload();
                 }).fail(function(xhr) {
-                    toast('error', xhr.responseJSON?.message || 'Gagal');
+                    const res = xhr.responseJSON || {};
+                    const sisa = Number(res.balance_due || 0);
+
+                    // Check-in wajib lunas: tawarkan pencatatan pelunasan langsung.
+                    if (sisa > 0) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Tagihan belum lunas',
+                            html: 'Sisa tagihan <strong>Rp ' + sisa.toLocaleString('id-ID') +
+                                '</strong>. Lunasi dulu sebelum check-in.',
+                            showCancelButton: true,
+                            confirmButtonText: 'Catat Pelunasan',
+                            cancelButtonText: 'Tutup'
+                        }).then(function(r) {
+                            if (!r.isConfirmed) return;
+                            catatPelunasan(id, sisa);
+                        });
+                        return;
+                    }
+
+                    toast('error', res.message || 'Gagal');
                 });
             });
         });
+
+        // Catat pelunasan tunai oleh admin/front desk.
+        function catatPelunasan(id, sisa) {
+            Swal.fire({
+                title: 'Catat pelunasan',
+                input: 'number',
+                inputValue: sisa,
+                inputAttributes: {
+                    min: 1,
+                    step: 1000
+                },
+                inputLabel: 'Nominal diterima (Rp)',
+                showCancelButton: true,
+                confirmButtonText: 'Simpan',
+                inputValidator: (v) => {
+                    if (!v || Number(v) <= 0) return 'Nominal wajib diisi';
+                    if (Number(v) > sisa) return 'Nominal melebihi sisa tagihan';
+                }
+            }).then(function(r) {
+                if (!r.isConfirmed) return;
+                $.post("{{ url('payments/cash') }}/" + id, {
+                    _token: "{{ csrf_token() }}",
+                    tipe: 'pelunasan',
+                    amount: r.value
+                }).done(function() {
+                    toast('success', 'Pelunasan dicatat. Klik Check-in lagi.');
+                    reload();
+                }).fail(function(xhr) {
+                    toast('error', xhr.responseJSON?.message || 'Gagal mencatat pelunasan');
+                });
+            });
+        }
 
         // Check-out
         $(document).on('click', '.btn-checkout', function() {

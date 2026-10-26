@@ -41,15 +41,37 @@ class BookingController extends Controller
      */
     public function index(Request $request)
     {
-        $from = $request->get('from', now()->toDateString());
-        $to = $request->get('to', now()->addDays(14)->toDateString());
+        $checkIn = $request->get('from', now()->toDateString());
+        $checkOut = $request->get('to', Carbon::parse($checkIn)->addDay()->toDateString());
 
-        $calendar = $this->availability->calendar($from, $to, $request->integer('room_id') ?: null);
+        // Kalender selalu 2 minggu ke depan dari hari ini — tidak dikunci
+        // oleh tanggal check-in/check-out. Rentang menginap hanya menyorot sel.
+        $windowStart = now()->startOfDay();
+        $windowEnd = $windowStart->copy()->addDays(14);
+
+        // Amankan bila tanggal terpilih berada di luar 3 minggu tersebut.
+        foreach ([$checkIn, $checkOut] as $d) {
+            $parsed = Carbon::parse($d)->startOfDay();
+            if ($parsed->lessThan($windowStart)) {
+                $windowStart = $parsed->copy();
+            }
+            if ($parsed->greaterThan($windowEnd)) {
+                $windowEnd = $parsed->copy();
+            }
+        }
+
+        $calendar = $this->availability->calendar(
+            $windowStart->toDateString(),
+            $windowEnd->toDateString(),
+            $request->integer('room_id') ?: null
+        );
 
         $types = Room::with('roomtypes')->active()->orderBy('sort_order')->orderBy('id')->get();
 
         return view('Booking.index', [
             'calendar' => $calendar,
+            'checkIn' => $checkIn,
+            'checkOut' => $checkOut,
             'types' => $types,
             'addons' => Addon::active()->orderBy('sort_order')->get(),
             'onlineAvailable' => $this->gateways->onlineAvailable(),
@@ -332,7 +354,12 @@ class BookingController extends Controller
         try {
             $this->bookings->checkIn($booking, auth()->user());
         } catch (BookingException $e) {
-            return response()->json(['message' => $e->getMessage()], $e->statusCode);
+            // Sertakan sisa tagihan agar admin bisa langsung mencatat pelunasan.
+            return response()->json([
+                'message' => $e->getMessage(),
+                'success' => false,
+                'balance_due' => (float) $booking->fresh()->balance_due,
+            ] + $e->context, $e->statusCode);
         }
 
         return response()->json(['message' => 'Check-in berhasil']);

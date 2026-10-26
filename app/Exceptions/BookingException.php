@@ -33,10 +33,10 @@ class BookingException extends RuntimeException
         return new self('DP belum terbayar. Booking tidak bisa dikonfirmasi.', 422);
     }
 
-    public static function outstandingBalance(float $balance): self
+    public static function outstandingBalance(float $balance, string $aktivitas = 'check-out'): self
     {
         return new self(
-            'Masih ada sisa pembayaran sebesar Rp ' . number_format($balance, 0, ',', '.') . '. Selesaikan pelunasan sebelum check-out.',
+            'Masih ada sisa pembayaran sebesar Rp ' . number_format($balance, 0, ',', '.') . '. Selesaikan pelunasan sebelum ' . $aktivitas . '.',
             422,
             ['balance_due' => $balance],
         );

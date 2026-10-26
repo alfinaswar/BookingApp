@@ -220,7 +220,7 @@
                                     </div>
                                 @elseif ($booking->status === 'checked_in' && $booking->balance_due > 0)
                                     <div class="mt-3 alert alert-warning mb-0">
-                                        Pelunasan dilakukan saat check-out.
+                                        Sisa tagihan dilunasi di front desk saat check-in.
                                     </div>
                                 @endif
                             </div>

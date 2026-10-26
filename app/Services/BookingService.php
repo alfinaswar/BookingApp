@@ -189,8 +189,10 @@ class BookingService
     {
         $this->assertTransition($booking, [Booking::STATUS_CONFIRMED], Booking::STATUS_CHECKED_IN);
 
-        if ((float) $booking->paid_total < (float) $booking->dp_amount) {
-            throw BookingException::dpNotPaid();
+        // Check-in mewajibkan seluruh tagihan lunas (bukan hanya DP),
+        // sejalan dengan aturan check-out.
+        if ((float) $booking->balance_due > 0) {
+            throw BookingException::outstandingBalance((float) $booking->balance_due, 'check-in');
         }
 
         return $this->transition($booking, Booking::STATUS_CHECKED_IN, $actor, 'Tamu check-in', [
